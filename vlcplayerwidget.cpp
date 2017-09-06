@@ -2,7 +2,13 @@
 #include "ui_vlcplayerwidget.h"
 #include <QPainter>
 
+extern "C"
+{
+#include "yuv2rgb.h"
+}
+
 #include <assert.h>
+
 
 
 VlcPlayerWidget::VlcPlayerWidget(QWidget *parent) :
@@ -20,7 +26,6 @@ VlcPlayerWidget::VlcPlayerWidget(QWidget *parent) :
     m_vlcplayer = libvlc_media_player_new(m_vlc);
     libvlc_video_set_callbacks(m_vlcplayer,lock_cb,unlock_cb,display_cb,this);
     libvlc_video_set_format_callbacks(m_vlcplayer,setup_cb,cleanup_cb);
-//    libvlc_video_set_format(m_vlcplayer,"RGBA",960,540,960);
 }
 
 VlcPlayerWidget::~VlcPlayerWidget()
@@ -57,8 +62,7 @@ void VlcPlayerWidget::pause()
 
 void VlcPlayerWidget::stop()
 {
-    if(libvlc_media_player_is_playing(m_vlcplayer))
-        libvlc_media_player_stop(m_vlcplayer);
+    libvlc_media_player_stop(m_vlcplayer);
 
     if(m_Front)
     {
@@ -76,7 +80,10 @@ void *VlcPlayerWidget::lock_cb(void *opaque, void **planes)
 {
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(opaque);
 
-    planes[0] = pthis->m_Back->bits();
+    planes[0] = pthis->m_Back->GetY();
+	planes[1] = pthis->m_Back->GetU();
+	planes[2] = pthis->m_Back->GetV();
+
 
     return pthis->m_Back;
 }
@@ -85,7 +92,7 @@ void VlcPlayerWidget::unlock_cb(void *opaque, void *picture, void * const *plane
 {
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(opaque);
 
-    QImage* p = pthis->m_Front;
+	I420Image* p = pthis->m_Front;
     pthis->m_Front = pthis->m_Back;
     pthis->m_Back = p;
 
@@ -95,7 +102,7 @@ void VlcPlayerWidget::display_cb(void *opaque, void *picture)
 {
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(opaque);
 
-//    pthis->update();
+    pthis->update();
 }
 
 unsigned VlcPlayerWidget::setup_cb(void **opaque, char *chroma, unsigned *width, unsigned *height, unsigned *pitches, unsigned *lines)
@@ -103,16 +110,16 @@ unsigned VlcPlayerWidget::setup_cb(void **opaque, char *chroma, unsigned *width,
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(*opaque);
     assert(pthis);
 
-    *chroma++='R';
-    *chroma++='G';
-    *chroma++='B';
-    *chroma='A';
+	pthis->m_Front = new I420Image(*width, *height);
+	pthis->m_Back = new I420Image(*width, *height);
 
-    pthis->m_Front = new QImage(*width,*height,QImage::Format_RGBA8888);
-    pthis->m_Back = new QImage(*width,*height,QImage::Format_RGBA8888);
+	pthis->m_ImgShow = new QImage(pthis->m_Front->GetWidth(), pthis->m_Front->GetHeight(), QImage::Format_RGB888);
 
-    pitches[0]=*width * 4;
+    pitches[0]=*width;
     lines[0] = *height;
+
+	pitches[1] = pitches[2] = *width / 2;
+	lines[1] = lines[2] = *height / 2;
 
     return 1;
 }
@@ -124,25 +131,33 @@ void VlcPlayerWidget::cleanup_cb(void *opaque)
 
 void VlcPlayerWidget::paintEvent(QPaintEvent *event)
 {
-    QImage img;
-    if(m_Front)
-    {
-        int x,y,w,h;
-        if((width()/height())>(m_Front->width()/m_Front->height()))
-        {
-            img = m_Front->scaledToHeight(height());
-        }
-        else
-        {
-            img = m_Front->scaledToWidth(width());
-        }
-        w = img.width();
-        h = img.height();
-        x = (width()-w)/2;
-        y = (height()-h)/2;
-        QPainter draw(this);        //创建QPainter，将指针传入该设备
-        QRect rect(x,y,w,h);  //创建绘图区域
-        draw.drawImage(rect,img);
-    }
+	if (m_Front)
+	{
+		int width = m_Front->GetWidth();
+		int height = m_Front->GetHeight();
+		yuv420_2_rgb888(m_ImgShow->bits(), m_Front->GetY(), m_Front->GetU(), m_Front->GetV(), width, height, width, width >> 1, width * 3, yuv2rgb565_table, 0);
+		int x, y, w, h;
+		float aspect = m_Front->GetWidth()*1.0f / m_Front->GetHeight();
+		if ((this->width()*1.0f / this->height()) > aspect)
+		{
+			h = this->height();
+			w = h*aspect;
+		}
+		else
+		{
+			w = this->width();
+			h = w / aspect;
+		}
+
+		x = (this->width() - w) / 2;
+		y = (this->height() - h) / 2;
+		
+		QPainter draw(this);
+		QRect rect(x, y, w, h);
+		draw.drawImage(rect, m_ImgShow->scaled(w,h,Qt::KeepAspectRatio));
+
+
+	}
+
     QWidget::paintEvent(event);
 }

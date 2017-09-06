@@ -5,6 +5,27 @@
 #include <vlc.h>
 #include <QImage>
 
+class I420Image
+{
+public:
+	I420Image(int w, int h)
+		: width(w)
+		, height(h)
+	{
+		data = new uint8_t[w*h + w*h / 2];
+	}
+	int GetWidth() const { return width; }
+	int GetHeight() const { return height; }
+	uint8_t *GetY() const { return data; }
+	uint8_t *GetU()const { return data + width*height; }
+	uint8_t *GetV()const { return data + width*height + width*height / 4; }
+protected:
+private:
+	int width;
+	int height;
+	uint8_t * data;
+};
+
 namespace Ui {
 class VlcPlayerWidget;
 }
@@ -44,8 +65,11 @@ private:
 
 private:
     QString m_input;
-    QImage *m_Front;
-    QImage *m_Back;
+    //QImage *m_Front;
+    //QImage *m_Back;
+	I420Image *m_Front;
+	I420Image *m_Back;
+	QImage *m_ImgShow;
 };
 
 #endif // VLCPLAYERWIDGET_H
