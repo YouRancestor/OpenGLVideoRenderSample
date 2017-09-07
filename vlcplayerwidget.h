@@ -26,9 +26,7 @@ private:
 	uint8_t * data;
 };
 
-namespace Ui {
-class VlcPlayerWidget;
-}
+
 
 class VlcPlayerWidget : public QWidget //, public Player
 {
@@ -56,8 +54,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event);
-private:
-    Ui::VlcPlayerWidget *ui;
+
 
 private:
     libvlc_instance_t* m_vlc;
@@ -65,8 +62,6 @@ private:
 
 private:
     QString m_input;
-    //QImage *m_Front;
-    //QImage *m_Back;
 	I420Image *m_Front;
 	I420Image *m_Back;
 	QImage *m_ImgShow;

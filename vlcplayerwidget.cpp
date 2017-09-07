@@ -1,5 +1,4 @@
 #include "vlcplayerwidget.h"
-#include "ui_vlcplayerwidget.h"
 #include <QPainter>
 
 extern "C"
@@ -13,13 +12,11 @@ extern "C"
 
 VlcPlayerWidget::VlcPlayerWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::VlcPlayerWidget),
     m_vlcplayer(NULL),
     m_vlc(NULL),
     m_Front(NULL),
     m_Back(NULL)
 {
-    ui->setupUi(this);
 
     m_vlc = libvlc_new(0,0);
 
@@ -31,7 +28,6 @@ VlcPlayerWidget::VlcPlayerWidget(QWidget *parent) :
 VlcPlayerWidget::~VlcPlayerWidget()
 {
     libvlc_release(m_vlc);
-    delete ui;
 }
 
 void VlcPlayerWidget::setInput(QString input)
