@@ -26,13 +26,10 @@ INCLUDEPATH += E:/Libraries/vlc-2.2.1/include
 
 SOURCES += main.cpp\
         widget.cpp \
-    vlcplayerwidget.cpp \
-    yuv2rgb16tab.c \
-    yuv420rgb888c.c
+    vlcplayerwidget.cpp
 
 HEADERS  += widget.h \
-    vlcplayerwidget.h \
-    yuv2rgb.h
+    vlcplayerwidget.h
 
 FORMS    += widget.ui
 

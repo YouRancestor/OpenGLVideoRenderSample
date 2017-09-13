@@ -2,10 +2,6 @@
 #include <QPainter>
 #include <QOpenGLFunctions_2_0>
 
-extern "C"
-{
-#include "yuv2rgb.h"
-}
 
 #include <assert.h>
 
@@ -113,8 +109,6 @@ unsigned VlcPlayerWidget::setup_cb(void **opaque, char *chroma, unsigned *width,
 	pthis->m_Front = new I420Image(*width, *height);
 	pthis->m_Back = new I420Image(*width, *height);
 
-	pthis->m_ImgShow = new QImage(pthis->m_Front->GetWidth(), pthis->m_Front->GetHeight(), QImage::Format_RGB888);
-
     pitches[0]=*width;
     lines[0] = *height;
 
@@ -135,41 +129,6 @@ void VlcPlayerWidget::initializeGL()
     InitShaders();
 
 }
-
-/*
-void VlcPlayerWidget::paintEvent(QPaintEvent *event)
-{
-    if (m_Front)
-	{
-		int width = m_Front->GetWidth();
-		int height = m_Front->GetHeight();
-		yuv420_2_rgb888(m_ImgShow->bits(), m_Front->GetY(), m_Front->GetU(), m_Front->GetV(), width, height, width, width >> 1, width * 3, yuv2rgb565_table, 0);
-		int x, y, w, h;
-		float aspect = m_Front->GetWidth()*1.0f / m_Front->GetHeight();
-		if ((this->width()*1.0f / this->height()) > aspect)
-		{
-			h = this->height();
-			w = h*aspect;
-		}
-		else
-		{
-			w = this->width();
-			h = w / aspect;
-		}
-
-		x = (this->width() - w) / 2;
-		y = (this->height() - h) / 2;
-		
-		QPainter draw(this);
-		QRect rect(x, y, w, h);
-		draw.drawImage(rect, m_ImgShow->scaled(w,h,Qt::KeepAspectRatio));
-
-
-	}
-
-    QWidget::paintEvent(event);
-}
-*/
 
 static const char *vertexShader = "\
 attribute vec4 vertexIn;\
@@ -216,17 +175,8 @@ static const GLfloat textureVertices[] = {
     1.0f,  0.0f,
 };
 
-//#include <QOpenGLShaderProgram>
-//#include <time.h>
 void VlcPlayerWidget::paintGL()
 {
-    // 帧率
-//    static uint64_t count = 0;
-//    ++count;
-//    static time_t time0 = ::time(NULL);
-//    time_t time = ::time(NULL);
-//    float fps = ((float)count)/(time-time0);
-//    qDebug("%f\n",fps);
 
     // 清除缓冲区
     glClearColor(0.0,0.0,0.0,0.0);
@@ -239,25 +189,25 @@ void VlcPlayerWidget::paintGL()
         // Y
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex_y);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, m_Front->GetY());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, (GLvoid*)m_Front->GetY());
         glUniform1i(sampler_y, 0);
 
         // U
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex_u);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w/2, h/2, 0, GL_RED, GL_UNSIGNED_BYTE, m_Front->GetU());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w/2, h/2, 0, GL_RED, GL_UNSIGNED_BYTE, (GLvoid*)m_Front->GetU());
         glUniform1i(sampler_u, 1);
 
         // V
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, tex_v);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w/2, h/2, 0, GL_RED, GL_UNSIGNED_BYTE, m_Front->GetV());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w/2, h/2, 0, GL_RED, GL_UNSIGNED_BYTE, (GLvoid*)m_Front->GetV());
         glUniform1i(sampler_v, 2);
 
 //        QOpenGLShaderProgram::setUniformValue();
-        glUniformMatrix4fv(matWorld,1,GL_TRUE,mWorld.constData());
-        glUniformMatrix4fv(matView,1,GL_TRUE,mView.constData());
-        glUniformMatrix4fv(matProj,1,GL_TRUE,mProj.constData());
+        glUniformMatrix4fv(matWorld,1, GL_FALSE,mWorld.constData());
+        glUniformMatrix4fv(matView,1, GL_FALSE,mView.constData());
+        glUniformMatrix4fv(matProj,1, GL_FALSE,mProj.constData());
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -271,26 +221,24 @@ void VlcPlayerWidget::resizeGL(int w, int h)
     float viewHeight=2.0f;
 
     mWorld.setToIdentity();
-    mWorld.translate(0,0,0);
 
     mView.setToIdentity();
-    mView.lookAt(QVector3D(0.0f,0.0f,-1.0f),QVector3D(0.f,0.f,0.f),QVector3D(0.f,1.f,0.f));
-
-    int widthw = width();
-    int heightw = height();
+    mView.lookAt(QVector3D(0.0f,0.0f,1.0f),QVector3D(0.f,0.f,0.f),QVector3D(0.f,1.f,0.f));
 
     mProj.setToIdentity();
     if(m_Front)
     {
-        if(float(float(w)/h > float(m_Front->GetWidth())/m_Front->GetHeight()))
+        float aspectRatio = float(m_Front->GetWidth()) / m_Front->GetHeight();
+        //aspectRatio = float(4) / 3; // 强制长宽比
+        if(float(float(w)/h > aspectRatio))
         {
             viewHeight = 2.0f;
-            viewWidth = w*viewHeight / (float(m_Front->GetWidth()) / m_Front->GetHeight() * h);
+            viewWidth = w*viewHeight / (aspectRatio * h);
         }
         else
         {
             viewWidth = 2.0f;
-            viewHeight = h*viewWidth / (float(m_Front->GetHeight()) / m_Front->GetWidth() * w);
+            viewHeight = h*viewWidth / (1/aspectRatio * w);
         }
     }
 
@@ -364,7 +312,7 @@ void VlcPlayerWidget::InitShaders()
     glEnableVertexAttribArray(ATTRIB_VERTEX);
 
     glVertexAttribPointer(ATTRIB_TEXTURE,2,GL_FLOAT,0,0,textureVertices);
-    glEnableVertexAttribArray(ATTRIB_VERTEX);
+    glEnableVertexAttribArray(ATTRIB_TEXTURE);
 
     matWorld = glGetUniformLocation(program,"mWorld");
     matView = glGetUniformLocation(program,"mView");

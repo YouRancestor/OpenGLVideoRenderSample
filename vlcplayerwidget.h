@@ -3,7 +3,6 @@
 
 #include <QOpenGLWidget>
 #include <vlc.h>
-#include <QImage>
 #include <QOpenGLFunctions_2_0>
 #include <QMatrix4x4>
 class I420Image
@@ -79,7 +78,6 @@ private:
 
 private:
     QString m_input;
-	QImage *m_ImgShow;
 };
 
 #endif // VLCPLAYERWIDGET_H
