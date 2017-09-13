@@ -6,6 +6,7 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
     ui->setupUi(this);
+    on_pushButton_clicked();
 }
 
 Widget::~Widget()
