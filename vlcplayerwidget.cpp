@@ -77,8 +77,8 @@ void *VlcPlayerWidget::lock_cb(void *opaque, void **planes)
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(opaque);
 
     planes[0] = pthis->m_Back->GetY();
-	planes[1] = pthis->m_Back->GetU();
-	planes[2] = pthis->m_Back->GetV();
+    planes[1] = pthis->m_Back->GetU();
+    planes[2] = pthis->m_Back->GetV();
 
 
     return pthis->m_Back;
@@ -88,7 +88,7 @@ void VlcPlayerWidget::unlock_cb(void *opaque, void *picture, void * const *plane
 {
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(opaque);
 
-	I420Image* p = pthis->m_Front;
+    I420Image* p = pthis->m_Front;
     pthis->m_Front = pthis->m_Back;
     pthis->m_Back = p;
 
@@ -106,14 +106,14 @@ unsigned VlcPlayerWidget::setup_cb(void **opaque, char *chroma, unsigned *width,
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(*opaque);
     assert(pthis);
 
-	pthis->m_Front = new I420Image(*width, *height);
-	pthis->m_Back = new I420Image(*width, *height);
+    pthis->m_Front = new I420Image(*width, *height);
+    pthis->m_Back = new I420Image(*width, *height);
 
     pitches[0]=*width;
     lines[0] = *height;
 
-	pitches[1] = pitches[2] = *width / 2;
-	lines[1] = lines[2] = *height / 2;
+    pitches[1] = pitches[2] = *width / 2;
+    lines[1] = lines[2] = *height / 2;
 
     return 1;
 }

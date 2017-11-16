@@ -2,28 +2,33 @@
 #define VLCPLAYERWIDGET_H
 
 #include <QOpenGLWidget>
-#include <vlc.h>
+#include <vlc/vlc.h>
 #include <QOpenGLFunctions_2_0>
 #include <QMatrix4x4>
 class I420Image
 {
 public:
-	I420Image(int w, int h)
-		: width(w)
-		, height(h)
-	{
-		data = new uint8_t[w*h + w*h / 2];
-	}
-	int GetWidth() const { return width; }
-	int GetHeight() const { return height; }
-	uint8_t *GetY() const { return data; }
-	uint8_t *GetU()const { return data + width*height; }
-	uint8_t *GetV()const { return data + width*height + width*height / 4; }
+    I420Image(int w, int h)
+        : width(w)
+        , height(h)
+    {
+        data = new uint8_t[w*h + w*h / 2];
+    }
+    ~I420Image()
+    {
+        delete []data;
+    }
+
+    int GetWidth() const { return width; }
+    int GetHeight() const { return height; }
+    uint8_t *GetY() const { return data; }
+    uint8_t *GetU()const { return data + width*height; }
+    uint8_t *GetV()const { return data + width*height + width*height / 4; }
 protected:
 private:
-	int width;
-	int height;
-	uint8_t * data;
+    int width;
+    int height;
+    uint8_t * data;
 };
 
 
@@ -73,8 +78,8 @@ private:
 private:
     libvlc_instance_t* m_vlc;
     libvlc_media_player_t *m_vlcplayer;
-	I420Image *m_Front;
-	I420Image *m_Back;
+    I420Image *m_Front;
+    I420Image *m_Back;
 
 private:
     QString m_input;

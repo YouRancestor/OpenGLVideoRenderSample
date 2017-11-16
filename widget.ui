@@ -30,6 +30,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>开始</string>
          </property>
