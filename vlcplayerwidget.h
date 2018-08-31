@@ -32,7 +32,7 @@ private:
 };
 
 
-
+#include <QMutex>
 class VlcPlayerWidget : public QOpenGLWidget, public QOpenGLFunctions_2_0 //, public Player
 {
     Q_OBJECT
@@ -80,6 +80,9 @@ private:
     libvlc_media_player_t *m_vlcplayer;
     I420Image *m_Front;
     I420Image *m_Back;
+
+    QMutex m_SetupMutex;
+    int m_bSetup;
 
 private:
     QString m_input;

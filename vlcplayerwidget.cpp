@@ -13,7 +13,8 @@ VlcPlayerWidget::VlcPlayerWidget(QWidget *parent) :
     m_vlcplayer(NULL),
     m_vlc(NULL),
     m_Front(NULL),
-    m_Back(NULL)
+    m_Back(NULL),
+    m_bSetup(0)
 {
 
     m_vlc = libvlc_new(0,0);
@@ -70,6 +71,7 @@ void VlcPlayerWidget::stop()
         delete m_Back;
         m_Back = NULL;
     }
+    m_bSetup=0;
 }
 
 void *VlcPlayerWidget::lock_cb(void *opaque, void **planes)
@@ -106,9 +108,14 @@ unsigned VlcPlayerWidget::setup_cb(void **opaque, char *chroma, unsigned *width,
     VlcPlayerWidget *pthis = static_cast<VlcPlayerWidget*>(*opaque);
     assert(pthis);
 
-    pthis->m_Front = new I420Image(*width, *height);
-    pthis->m_Back = new I420Image(*width, *height);
-
+    pthis->m_SetupMutex.lock();
+    if(!pthis->m_bSetup)
+    {
+        pthis->m_Front = new I420Image(*width, *height);
+        pthis->m_Back = new I420Image(*width, *height);
+        pthis->m_bSetup=1;
+    }
+    pthis->m_SetupMutex.unlock();
     pitches[0]=*width;
     lines[0] = *height;
 
