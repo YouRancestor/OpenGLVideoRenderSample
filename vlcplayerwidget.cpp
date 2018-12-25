@@ -40,7 +40,8 @@ void VlcPlayerWidget::play()
     stop();
     libvlc_media_t *pmedia = libvlc_media_new_location(m_vlc,m_input.toLocal8Bit().data());
 
-    libvlc_media_add_option(pmedia, ":rtsp-tcp=true :network-caching=300");
+    libvlc_media_add_option(pmedia, ":rtsp-tcp=true");
+    libvlc_media_add_option(pmedia, ":network-caching=300");
     libvlc_media_player_set_media(m_vlcplayer,pmedia);
     libvlc_media_player_play(m_vlcplayer);
 
