@@ -34,5 +34,10 @@ void Widget::on_pushButton_3_clicked()
 void Widget::on_pushButton_4_clicked()
 {
     double angle = ui->doubleSpinBox->value();
+    ui->widget->initRotate();
+}
+
+void Widget::on_doubleSpinBox_valueChanged(double angle)
+{
     ui->widget->setRotate(angle);
 }

@@ -31,7 +31,7 @@ private:
     uint8_t * data;
 };
 
-
+typedef struct vout_thread_t vout_thread_t;
 
 class VlcPlayerWidget : public QOpenGLWidget, public QOpenGLFunctions_2_0 //, public Player
 {
@@ -46,6 +46,7 @@ public:
     void play();
     void pause();
     void stop();
+    void initRotate();
     void setRotate(float angle);
 
 public:
@@ -81,6 +82,8 @@ private:
     libvlc_media_player_t *m_vlcplayer;
     I420Image *m_Front;
     I420Image *m_Back;
+
+    vout_thread_t* m_vout;
 
 private:
     QString m_input;

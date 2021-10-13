@@ -22,7 +22,8 @@ VlcPlayerWidget::VlcPlayerWidget(QWidget *parent) :
     m_vlcplayer(NULL),
     m_vlc(NULL),
     m_Front(NULL),
-    m_Back(NULL)
+    m_Back(NULL),
+    m_vout(NULL)
 {
 
     m_vlc = libvlc_new(0,0);
@@ -81,7 +82,7 @@ void VlcPlayerWidget::stop()
     }
 }
 
-void VlcPlayerWidget::setRotate(float angle)
+void VlcPlayerWidget::initRotate()
 {
     input_thread_t *input_thread = libvlc_get_input_thread(m_vlcplayer);
     vout_thread_t **pp_vout;
@@ -96,16 +97,22 @@ void VlcPlayerWidget::setRotate(float angle)
             if (first_time) // 第一次点击按钮，设置使用视频滤波器模块。
             {
                 first_time = false;
-                ret = var_SetString(pp_vout[0], "video-filter", "rotate"); // 设置名称即可，模块会自动加载
-                var_Create(pp_vout[0], "rotate-angle", VLC_VAR_FLOAT); // rotate模块不会立即加载，手动创建所需参数，不然第一次调用下面的var_SetFloat会不生效。
+                ret = var_SetString(pp_vout[0], "video-filter", "rotate"); // 设置名称即可，模块会自动加载，但不会立即加载，因此要过一会儿才能调var_SetFloat。
             }
-
-            ret = var_SetFloat(pp_vout[0], "rotate-angle", angle);
+            m_vout = pp_vout[0];
+            setRotate(90.0f);
         }
         vlc_object_release( (vlc_object_t *)(pp_vout[i]) );
     }
     vlc_object_release( input_thread );
+}
 
+void VlcPlayerWidget::setRotate(float angle)
+{
+    if (m_vout)
+    {
+        int ret = var_SetFloat(m_vout, "rotate-angle", angle);
+    }
 }
 
 void *VlcPlayerWidget::lock_cb(void *opaque, void **planes)
