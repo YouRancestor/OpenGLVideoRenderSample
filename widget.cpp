@@ -1,3 +1,4 @@
+#define ssize_t size_t
 #include "widget.h"
 #include "ui_widget.h"
 
@@ -28,4 +29,10 @@ void Widget::on_pushButton_2_clicked()
 void Widget::on_pushButton_3_clicked()
 {
     ui->widget->stop();
+}
+
+void Widget::on_pushButton_4_clicked()
+{
+    double angle = ui->doubleSpinBox->value();
+    ui->widget->setRotate(angle);
 }

@@ -1,7 +1,16 @@
+#define ssize_t size_t
+#include <WinSock2.h>
 #include "vlcplayerwidget.h"
 #include <QPainter>
 #include <QOpenGLFunctions_2_0>
 
+#define ssize_t size_t
+#include <vlc_fixups.h>
+#include <libvlc_internal.h>
+extern "C"
+{
+#include <media_player_internal.h>
+}
 
 #include <assert.h>
 
@@ -34,7 +43,7 @@ void VlcPlayerWidget::setInput(QString input)
 {
     m_input = input;
 }
-
+// video-filter
 void VlcPlayerWidget::play()
 {
     stop();
@@ -44,7 +53,6 @@ void VlcPlayerWidget::play()
     libvlc_media_add_option(pmedia, ":network-caching=300");
     libvlc_media_player_set_media(m_vlcplayer,pmedia);
     libvlc_media_player_play(m_vlcplayer);
-
     libvlc_media_release(pmedia);
 
 }
@@ -71,6 +79,33 @@ void VlcPlayerWidget::stop()
         delete m_Back;
         m_Back = NULL;
     }
+}
+
+void VlcPlayerWidget::setRotate(float angle)
+{
+    input_thread_t *input_thread = libvlc_get_input_thread(m_vlcplayer);
+    vout_thread_t **pp_vout;
+    size_t i_vout;
+    input_Control(input_thread, INPUT_GET_VOUTS, &pp_vout, &i_vout);
+    for( size_t i = 0; i < i_vout; i++ )
+    {
+        int ret = 0;
+        if (i == 0)
+        {
+            static bool first_time = true;
+            if (first_time) // 第一次点击按钮，设置使用视频滤波器模块。
+            {
+                first_time = false;
+                ret = var_SetString(pp_vout[0], "video-filter", "rotate"); // 设置名称即可，模块会自动加载
+                var_Create(pp_vout[0], "rotate-angle", VLC_VAR_FLOAT); // rotate模块不会立即加载，手动创建所需参数，不然第一次调用下面的var_SetFloat会不生效。
+            }
+
+            ret = var_SetFloat(pp_vout[0], "rotate-angle", angle);
+        }
+        vlc_object_release( (vlc_object_t *)(pp_vout[i]) );
+    }
+    vlc_object_release( input_thread );
+
 }
 
 void *VlcPlayerWidget::lock_cb(void *opaque, void **planes)

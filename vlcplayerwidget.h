@@ -46,6 +46,7 @@ public:
     void play();
     void pause();
     void stop();
+    void setRotate(float angle);
 
 public:
     static void *lock_cb(void *opaque, void **planes);

@@ -24,7 +24,7 @@
        <item>
         <widget class="QLineEdit" name="lineEdit">
          <property name="text">
-          <string>file:///C:\Users\zYr\Desktop\testfiles\1.mkv</string>
+          <string>file:///F:\Home\zyr\Videos\Endro~!\[LKSUB][Endro~! ][01][GB][720P].mp4</string>
          </property>
         </widget>
        </item>
@@ -49,6 +49,23 @@
         <widget class="QPushButton" name="pushButton_3">
          <property name="text">
           <string>停止</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="doubleSpinBox">
+         <property name="maximum">
+          <double>360.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>60.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_4">
+         <property name="text">
+          <string>Rotate</string>
          </property>
         </widget>
        </item>
